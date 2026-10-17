@@ -1,0 +1,14 @@
+name        = "platform"
+environment = "dev"
+region      = "eu-central-1"
+
+cluster_version     = "1.30"
+node_instance_types = ["m6i.large"]
+node_desired_size   = 3
+
+gpu_nodes_enabled  = false
+gpu_instance_types = ["g5.xlarge"]
+
+admin_role_arns = [
+  "arn:aws:iam::123456789012:role/platform-admins",
+]

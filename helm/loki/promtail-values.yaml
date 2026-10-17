@@ -1,0 +1,18 @@
+config:
+  clients:
+    - url: http://loki-gateway.monitoring.svc/loki/api/v1/push
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+tolerations:
+  - operator: Exists
+
+serviceMonitor:
+  enabled: true
+  labels:
+    release: kube-prometheus-stack

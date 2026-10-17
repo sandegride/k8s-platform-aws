@@ -1,0 +1,75 @@
+repositories:
+  - name: ingress-nginx
+    url: https://kubernetes.github.io/ingress-nginx
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: kyverno
+    url: https://kyverno.github.io/kyverno
+
+environments:
+  default:
+    values:
+      - clusterName: platform-dev
+        acmeEmail: ops@example.com
+        grafanaHost: grafana.example.com
+        telegramChatId: -1000000000000
+        lokiRoleArn: arn:aws:iam::123456789012:role/platform-dev-loki
+
+---
+helmDefaults:
+  wait: true
+  timeout: 600
+  atomic: true
+  createNamespace: true
+
+releases:
+  - name: ingress-nginx
+    namespace: ingress-nginx
+    chart: ingress-nginx/ingress-nginx
+    version: 4.11.3
+    values:
+      - helm/ingress-nginx/values.yaml
+
+  - name: cert-manager
+    namespace: cert-manager
+    chart: jetstack/cert-manager
+    version: v1.16.1
+    values:
+      - helm/cert-manager/values.yaml
+
+  - name: kube-prometheus-stack
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: 65.5.0
+    values:
+      - helm/kube-prometheus-stack/values.yaml.gotmpl
+
+  - name: loki
+    namespace: monitoring
+    chart: grafana/loki
+    version: 6.18.0
+    values:
+      - helm/loki/values.yaml
+      - serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: {{ .Values.lokiRoleArn }}
+
+  - name: promtail
+    namespace: monitoring
+    chart: grafana/promtail
+    version: 6.16.6
+    values:
+      - helm/loki/promtail-values.yaml
+    needs:
+      - monitoring/loki
+
+  - name: kyverno
+    namespace: kyverno
+    chart: kyverno/kyverno
+    version: 3.2.7
+    values:
+      - helm/kyverno/values.yaml
